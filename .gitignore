@@ -1,0 +1,79 @@
+# .gitignore for a .NET 8 Razor Pages project (Visual Studio)
+# Keeps build artifacts, user-specific files, credentials and editor caches out of Git.
+
+# Build outputs
+[Bb]in/
+[Oo]bj/
+*/bin/
+*/obj/
+
+# Publish output
+**/publish/
+
+# Visual Studio workspace & user files
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider / JetBrains
+.idea/	
+*.sln.iml
+*.Rider/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# NuGet / packages
+packages/
+*.nupkg
+project.lock.json
+project.fragment.lock.json
+.nuget/
+
+# ASP.NET Core / secrets and local settings
+secrets.json
+appsettings.Development.json
+appsettings.*.local
+
+# Node / front-end
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log
+
+# Test results & coverage
+TestResults/
+*.trx
+coverage/
+*.coverage
+*.coveragexml
+
+# Logs and databases
+*.log
+*.sqlite
+*.db
+*.mdf
+*.ldf
+*.db-journal
+
+# IDE / tool caches
+_ReSharper*/
+*.ReSharper
+*.DotSettings.user
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Temp files
+*.tmp
+*.temp
+
+# Local environment files
+.env
+.env.local
+.env.*.local
