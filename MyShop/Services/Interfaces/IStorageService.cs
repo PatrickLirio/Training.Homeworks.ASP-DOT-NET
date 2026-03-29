@@ -1,7 +1,8 @@
 
 using MyShop.DTO;
+using MyShop.DTO.Items;
 using MyShop.DTO.Orders;
-using MyShop.Entities;
+
 
 namespace MyShop.Services.Interfaces
 {
@@ -23,7 +24,11 @@ namespace MyShop.Services.Interfaces
         Task DeleteOrder(int id);
 
         // //items
-        // Task<List<Item>> GetAllItems();
+        Task<IEnumerable<ItemResponseDTO>> GetAllItems();
+        Task<ItemResponseDTO> GetItemById(int id);
+        Task AddItem(ItemCreateDTO itemInput);
+        Task UpdateItem(int id, ItemUpdateDTO itemInput);
+        Task DeleteItem(int id);
 
 
         

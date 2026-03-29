@@ -2,6 +2,7 @@
 
 using System.Text.Json;
 using MyShop.DTO;
+using MyShop.DTO.Items;
 using MyShop.DTO.Orders;
 using MyShop.Entities;
 using MyShop.Mapping;
@@ -233,6 +234,105 @@ namespace MyShop.Services
                 throw;
             } 
         }
-    
+
+
+//items
+        public async Task<IEnumerable<ItemResponseDTO>> GetAllItems()
+        {
+            if (!File.Exists(_itemsFilePath))
+            {
+                return Enumerable.Empty<ItemResponseDTO>();
+            }
+            try
+            {                
+            var itemsJson = await File.ReadAllTextAsync(_itemsFilePath);
+            var items = JsonSerializer.Deserialize<List<OrderItem>>(itemsJson) ?? new List<OrderItem>();
+            return items.Select(item => new ItemResponseDTO
+            {
+                Id = item.Id,
+                ProductId = item.ProductId,
+                ProductName = item.Product?.Name ?? string.Empty,
+                Quantity = item.Quantity
+            }).ToList();
+            }
+            catch (JsonException)
+            {
+                // JSON is corrupted 
+                return new List<ItemResponseDTO>();
+            }
+            catch (IOException)
+            {
+                // File access issues
+                throw;
+            }
+        }
+
+        public async Task<ItemResponseDTO> GetItemById(int id)
+        {
+            var items = await GetAllItems();
+            var item = items.FirstOrDefault(item => item.Id == id) ?? throw new KeyNotFoundException($"Item with ID {id} not found.");
+            return item;
+        }
+
+        public async Task AddItem(ItemCreateDTO itemInput)
+        {
+            var itemsJson = await File.ReadAllTextAsync(_itemsFilePath);
+            var items = JsonSerializer.Deserialize<List<OrderItem>>(itemsJson) ?? new List<OrderItem>();
+
+            var newItem = new OrderItem
+            {
+                Id = items.Count > 0 ? items.Max(item => item.Id) + 1 : 1,
+                ProductId = itemInput.ProductId,
+                Quantity = itemInput.Quantity,
+            };
+
+             try
+            {
+                items.Add(newItem);
+                var serializedItems = JsonSerializer.Serialize(items, new JsonSerializerOptions { WriteIndented = true });
+                await File.WriteAllTextAsync(_itemsFilePath, serializedItems);
+            }
+            catch (IOException)
+            {
+                throw;
+            }
+        }
+
+        public async Task UpdateItem(int id, ItemUpdateDTO itemInput)
+        {
+            var itemsJson = await File.ReadAllTextAsync(_itemsFilePath);
+            var items = JsonSerializer.Deserialize<List<OrderItem>>(itemsJson) ?? new List<OrderItem>();
+            var existingItem = items.FirstOrDefault(item => item.Id == id)
+             ?? throw new KeyNotFoundException("Item not found.");
+
+            existingItem.Quantity = itemInput.Quantity;
+
+            try
+            {
+                await File.WriteAllTextAsync(_itemsFilePath, JsonSerializer.Serialize(items, new JsonSerializerOptions { WriteIndented = true }));
+            }
+            catch (IOException)
+            {
+                throw;
+            }
+        }
+        
+        public async Task DeleteItem(int id)
+        {
+            var items = (await GetAllItems()).ToList();
+            var itemToRemove = items.FirstOrDefault(item => item.Id == id)
+            ?? throw new KeyNotFoundException("Item not found.");
+
+            try
+            {
+                items.Remove(itemToRemove);
+                var serializedItems = JsonSerializer.Serialize(items, new JsonSerializerOptions { WriteIndented = true });
+                await File.WriteAllTextAsync(_itemsFilePath, serializedItems);
+            }
+            catch (IOException)
+            {
+                throw;
+            } 
+        }
     }
 }
