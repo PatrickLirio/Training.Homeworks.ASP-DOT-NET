@@ -2,6 +2,7 @@
 
 using System.Text.Json;
 using MyShop.DTO;
+using MyShop.DTO.Orders;
 using MyShop.Entities;
 using MyShop.Mapping;
 using MyShop.Services.Interfaces;
@@ -14,6 +15,7 @@ namespace MyShop.Services
         private readonly string _ordersFilePath = "orders.json";
         private readonly string _itemsFilePath = "items.json";
 
+//products
         public async Task<IEnumerable<ProductResponseDTO>> GetAllProducts() // used IEnumerable for read only/ immutable list
         {
             if (!File.Exists(_productsFilePath))
@@ -24,7 +26,7 @@ namespace MyShop.Services
             {                
             var productsJson = await File.ReadAllTextAsync(_productsFilePath);
             var products = JsonSerializer.Deserialize<List<Product>>(productsJson) ?? new List<Product>();
-            return Helper.MapToResponseDTOList(products);
+            return Helper.MapToProductResponseDTOList(products);
             }
             catch (JsonException)
             {
@@ -42,7 +44,7 @@ namespace MyShop.Services
         {
             var products = await GetAllProducts();
             var product = products.FirstOrDefault(prod => prod.Id == id) ?? throw new KeyNotFoundException($"Product with ID {id} not found.");
-            return Helper.MapToResponseDTO(product);
+            return Helper.MapToProductResponseDTO(product);
         }
 
         public async Task AddProduct(ProductCreateDTO productInput)
@@ -51,7 +53,7 @@ namespace MyShop.Services
             var products = JsonSerializer.Deserialize<List<Product>>(productsJson) ?? new List<Product>();
 
              // Check if the name already exists (case-insensitive)
-            if (products.Any(p => p.Name.Equals(productInput.Name, 
+            if (products.Any(prod => prod.Name.Equals(productInput.Name, 
                 StringComparison.OrdinalIgnoreCase)))
                 throw new InvalidOperationException(
                     "A product with the same name already exists.");
@@ -59,7 +61,7 @@ namespace MyShop.Services
             // Map DTO in Entity
             var product = new Product
             {
-                Id          = products.Count > 0 ? products.Max(p => p.Id) + 1 : 1,
+                Id          = products.Count > 0 ? products.Max(prod => prod.Id) + 1 : 1,
                 Name        = productInput.Name,
                 Price       = productInput.Price,
                 Description = productInput.Description,
@@ -79,13 +81,13 @@ namespace MyShop.Services
             } 
         }
 
-        public async Task UpdateProduct(int id, ProductUpdateDTO productInput)
+        public async Task UpdateProduct(int Id, ProductUpdateDTO productInput)
         {
             var products = (await GetAllProducts()).ToList();
-            var existingProduct = products.FirstOrDefault(prod => prod.Id == id)
+            var existingProduct = products.FirstOrDefault(prod => prod.Id == Id)
              ?? throw new KeyNotFoundException("Product not found.");
 
-             if (products.Any(prod => prod.Id != id && 
+             if (products.Any(prod => prod.Id != Id && 
                 prod.Name.Equals(productInput.Name, StringComparison.OrdinalIgnoreCase)))
                 throw new InvalidOperationException(
                     "A product with the same name already exists.");
@@ -101,10 +103,10 @@ namespace MyShop.Services
             catch (IOException) { throw; }
         }
         
-        public async Task DeleteProduct(int id)
+        public async Task DeleteProduct(int Id)
         {
             var products = (await GetAllProducts()).ToList();
-            var productToRemove = products.FirstOrDefault(prod => prod.Id == id)
+            var productToRemove = products.FirstOrDefault(prod => prod.Id == Id)
             ?? throw new KeyNotFoundException("Product not found.");
 
             try
@@ -119,6 +121,118 @@ namespace MyShop.Services
                 throw;
             } 
         }
-        
+
+//orders
+        public async Task <IEnumerable<OrderResponseDTO>> GetAllOrders()
+        {
+            if (!File.Exists(_ordersFilePath))
+            {
+                return Enumerable.Empty<OrderResponseDTO>();
+            }
+            try
+            {                
+            var ordersJson = await File.ReadAllTextAsync(_ordersFilePath);
+            var orders = JsonSerializer.Deserialize<List<Order>>(ordersJson) ?? new List<Order>();
+            return Helper.MapToOrderResponseDTOList(orders);
+            }
+            catch (JsonException)
+            {
+                // JSON is corrupted 
+                return new List<OrderResponseDTO>();
+            }
+            catch (IOException)
+            {
+                // File access issues
+                throw; 
+            }
+        }
+
+        public async Task <OrderResponseDTO> GetOrderById(int id)
+        {
+             var orders = await GetAllOrders();
+            var order = orders.FirstOrDefault(order => order.Id == id) ?? throw new KeyNotFoundException($"Order with ID {id} not found.");
+            return Helper.MapToOrderResponseDTOList(order);
+        }
+
+        public async Task AddOrder(OrderCreateDTO orderInput)
+        {
+            var ordersJson = await File.ReadAllTextAsync(_ordersFilePath);
+            var orders = JsonSerializer.Deserialize<List<Order>>(ordersJson) ?? new List<Order>();
+
+            // Map DTO in Entity
+            var newOrder = new Order
+            {
+                Id          = orders.Count > 0 ? orders.Max(order => order.Id) + 1 : 1,
+                CustomerName        = orderInput.CustomerName,
+                OrderDate = DateTime.Now,
+                OrderItems = orderInput.Items.Select(item => new OrderItem
+                {
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitPrice
+                }).ToList()
+            };
+
+             try
+            {
+                orders.Add(newOrder);
+                var serializedOrders = JsonSerializer.Serialize(orders, new JsonSerializerOptions { WriteIndented = true });
+                await File.WriteAllTextAsync(_ordersFilePath, serializedOrders);
+            }
+            catch (IOException)
+            {
+                throw;
+            }
+
+
+
+
+        }
+    
+        public async Task UpdateOrder(int id, OrderUpdateDTO orderInput)
+        {
+            //  var orders = (await GetAllOrders()).ToList();
+            var ordersJson = await File.ReadAllTextAsync(_ordersFilePath);
+            var orders = JsonSerializer.Deserialize<List<Order>>(ordersJson) ?? new List<Order>();
+            var existingOrder = orders.FirstOrDefault(order => order.Id == id)
+             ?? throw new KeyNotFoundException("Order not found.");
+
+            existingOrder.CustomerName = orderInput.CustomerName;
+
+           existingOrder.OrderItems = orderInput.Items.Select(item => new OrderItem
+            {
+                OrderId = id, 
+                ProductId = item.ProductId,
+                Quantity = item.Quantity,
+                UnitPrice = item.UnitPrice
+            }).ToList();   
+            try
+            {
+                await File.WriteAllTextAsync(_ordersFilePath, JsonSerializer.Serialize(orders, new JsonSerializerOptions { WriteIndented = true }));
+            }
+            catch (IOException)
+            {
+                throw;
+            }
+        }
+    
+        public async Task DeleteOrder(int id)
+        {
+            var orders = (await GetAllOrders()).ToList();
+            var orderToRemove = orders.FirstOrDefault(order => order.Id == id)
+            ?? throw new KeyNotFoundException("Order not found.");
+
+            try
+            {
+                orders.Remove(orderToRemove);
+                var serializedOrders = JsonSerializer.Serialize(orders, new JsonSerializerOptions { WriteIndented = true });
+                await File.WriteAllTextAsync(_ordersFilePath, serializedOrders);
+            }
+            catch (IOException)
+            {
+                throw;
+            } 
+        }
+    
     }
 }

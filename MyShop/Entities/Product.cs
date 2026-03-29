@@ -1,7 +1,4 @@
 
-
-using System.ComponentModel.DataAnnotations;
-
 namespace MyShop.Entities
 {
     public class Product

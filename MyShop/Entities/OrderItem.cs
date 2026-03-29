@@ -1,4 +1,6 @@
 
+using System.Text.Json.Serialization;
+
 namespace MyShop.Entities
 {
     public class OrderItem

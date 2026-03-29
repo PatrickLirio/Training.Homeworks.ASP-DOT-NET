@@ -9,7 +9,7 @@ namespace MyShop.Mapping
     public class Helper
     {
         //Map through this method to convert Product to ProductResponseDTO
-        public static ProductResponseDTO MapToResponseDTO(Product product) => new()
+        public static ProductResponseDTO MapToProductResponseDTO(Product product) => new()
         {
             Id          = product.Id,
             Name        = product.Name,
@@ -19,11 +19,11 @@ namespace MyShop.Mapping
         };
 
         // Map a list of Products to a list of ProductResponseDTOs
-        public static List<ProductResponseDTO> MapToResponseDTOList(List<Product> products)
-            => products.Select(MapToResponseDTO).ToList();
+        public static List<ProductResponseDTO> MapToProductResponseDTOList(List<Product> products)
+            => products.Select(MapToProductResponseDTO).ToList();
 
         // Alternative implementation without LINQ
-        internal static ProductResponseDTO MapToResponseDTO(ProductResponseDTO product)
+        internal static ProductResponseDTO MapToProductResponseDTO(ProductResponseDTO product)
         {
             throw new NotImplementedException();
         }
@@ -43,5 +43,14 @@ namespace MyShop.Mapping
                 Subtotal    = i.UnitPrice * i.Quantity
             }).ToList()
         };
+
+    // Map a list of Products to a list of ProductResponseDTOs
+        public static List<OrderResponseDTO> MapToOrderResponseDTOList(List<Order> orders)
+            => orders.Select(MapToOrderResponseDTO).ToList();
+
+        internal static OrderResponseDTO MapToOrderResponseDTOList(OrderResponseDTO order)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
