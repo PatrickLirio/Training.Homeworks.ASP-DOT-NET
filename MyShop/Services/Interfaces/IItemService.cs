@@ -1,12 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MyShop.Services.Interfaces
 {
-    public interface IItemService
+    public interface IItemService : IStorageService
     {
-        
+        // Define any additional methods specific to ItemService if needed
     }
 }

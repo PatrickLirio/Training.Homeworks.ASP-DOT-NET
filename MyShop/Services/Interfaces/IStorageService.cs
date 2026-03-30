@@ -30,8 +30,5 @@ namespace MyShop.Services.Interfaces
         Task UpdateItem(int id, ItemUpdateDTO itemInput);
         Task DeleteItem(int id);
 
-
-        
-
     }
 }

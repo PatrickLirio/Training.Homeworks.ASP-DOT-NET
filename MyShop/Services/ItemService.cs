@@ -1,8 +1,7 @@
 
-
 namespace MyShop.Services
 {
-    public class ItemService
+    public class ItemService : StorageService
     {
         
     }

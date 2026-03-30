@@ -8,8 +8,6 @@ namespace MyShop.Entities
         public string Description { get; set; }  = string.Empty;
         public string Category { get; set; }  = string.Empty;
         public decimal Price { get; set; }
-
-        public ICollection<Item> Items { get; set; } = new List<Item>();
         
 
     }

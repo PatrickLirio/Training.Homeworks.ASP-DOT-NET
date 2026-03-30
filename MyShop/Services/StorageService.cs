@@ -19,13 +19,10 @@ namespace MyShop.Services
 //products
         public async Task<IEnumerable<ProductResponseDTO>> GetAllProducts() // used IEnumerable for read only/ immutable list
         {
-            if (!File.Exists(_productsFilePath))
-            {
-                return Enumerable.Empty<ProductResponseDTO>();
-            }
+            var productsJson = File.Exists(_productsFilePath) ? await File.ReadAllTextAsync(_productsFilePath) : "[]";
+
             try
             {                
-            var productsJson = await File.ReadAllTextAsync(_productsFilePath);
             var products = JsonSerializer.Deserialize<List<Product>>(productsJson) ?? new List<Product>();
             return Helper.MapToProductResponseDTOList(products);
             }
@@ -45,12 +42,15 @@ namespace MyShop.Services
         {
             var products = await GetAllProducts();
             var product = products.FirstOrDefault(prod => prod.Id == id) ?? throw new KeyNotFoundException($"Product with ID {id} not found.");
-            return Helper.MapToProductResponseDTO(product);
+            return product;
+            // return Helper.MapToProductResponseDTO(product);
         }
 
         public async Task AddProduct(ProductCreateDTO productInput)
         {
-            var productsJson = await File.ReadAllTextAsync(_productsFilePath);
+            var productsJson = File.Exists(_productsFilePath) 
+                ? await File.ReadAllTextAsync(_productsFilePath) 
+                : "[]";
             var products = JsonSerializer.Deserialize<List<Product>>(productsJson) ?? new List<Product>();
 
              // Check if the name already exists (case-insensitive)
@@ -59,21 +59,15 @@ namespace MyShop.Services
                 throw new InvalidOperationException(
                     "A product with the same name already exists.");
 
-            // Map DTO in Entity
-            var product = new Product
-            {
-                Id          = products.Count > 0 ? products.Max(prod => prod.Id) + 1 : 1,
-                Name        = productInput.Name,
-                Price       = productInput.Price,
-                Description = productInput.Description,
-                Category    = productInput.Category
-            };
+           // ✅ ID generation stays in the service, mapping goes to Helper
+            var newId   = products.Count > 0 ? products.Max(p => p.Id) + 1 : 1;
+            var product = Helper.MapToProductEntity(productInput, newId);
 
              try
             {
                 products.Add(product);
-                var serializedProducts = JsonSerializer.Serialize(products);
-                await File.WriteAllTextAsync(_productsFilePath, serializedProducts);
+                await File.WriteAllTextAsync(_productsFilePath, JsonSerializer.Serialize(products, 
+                    new JsonSerializerOptions { WriteIndented = true }));
             }
             catch (IOException)
             {
@@ -84,22 +78,26 @@ namespace MyShop.Services
 
         public async Task UpdateProduct(int Id, ProductUpdateDTO productInput)
         {
-            var products = (await GetAllProducts()).ToList();
+            var productsJson = File.Exists(_productsFilePath) ? await File.ReadAllTextAsync(_productsFilePath) : "[]";
+            var products = JsonSerializer.Deserialize<List<Product>>(productsJson) ?? new List<Product>();
             var existingProduct = products.FirstOrDefault(prod => prod.Id == Id)
-             ?? throw new KeyNotFoundException("Product not found.");
+            ?? throw new KeyNotFoundException("Product not found.");
 
              if (products.Any(prod => prod.Id != Id && 
                 prod.Name.Equals(productInput.Name, StringComparison.OrdinalIgnoreCase)))
                 throw new InvalidOperationException(
                     "A product with the same name already exists.");
-            try
-            {
+
                 existingProduct.Name        = productInput.Name;
                 existingProduct.Price       = productInput.Price;
                 existingProduct.Description = productInput.Description;
                 existingProduct.Category    = productInput.Category;
+            try
+            {
+
                 //saving
-                 await File.WriteAllTextAsync(_productsFilePath, JsonSerializer.Serialize(products));
+                 await File.WriteAllTextAsync(_productsFilePath, 
+                 JsonSerializer.Serialize(products));
             }
             catch (IOException) { throw; }
         }
@@ -126,15 +124,20 @@ namespace MyShop.Services
 //orders
         public async Task <IEnumerable<OrderResponseDTO>> GetAllOrders()
         {
-            if (!File.Exists(_ordersFilePath))
-            {
-                return Enumerable.Empty<OrderResponseDTO>();
-            }
+
             try
             {                
-            var ordersJson = await File.ReadAllTextAsync(_ordersFilePath);
+            var ordersJson = File.Exists(_ordersFilePath) ? await File.ReadAllTextAsync(_ordersFilePath) : "[]";
+            var productsJson = File.Exists(_productsFilePath) ? await File.ReadAllTextAsync(_productsFilePath) : "[]";
+
+
             var orders = JsonSerializer.Deserialize<List<Order>>(ordersJson) ?? new List<Order>();
-            return Helper.MapToOrderResponseDTOList(orders);
+            var products = JsonSerializer.Deserialize<List<Product>>(productsJson) ?? new List<Product>();
+
+            var productLookup = products.ToDictionary(p => p.Id, p => p);
+
+
+            return Helper.MapToOrderResponseDTOList(orders, productLookup);
             }
             catch (JsonException)
             {
@@ -152,24 +155,50 @@ namespace MyShop.Services
         {
              var orders = await GetAllOrders();
             var order = orders.FirstOrDefault(order => order.Id == id) ?? throw new KeyNotFoundException($"Order with ID {id} not found.");
-            return Helper.MapToOrderResponseDTOList(order);
+            return order;
+            // return Helper.MapToOrderResponseDTOList(order);
         }
 
         public async Task AddOrder(OrderCreateDTO orderInput)
         {
-            var ordersJson = await File.ReadAllTextAsync(_ordersFilePath);
+            // Load inventory (items.json)
+            var itemsJson = File.Exists(_itemsFilePath) 
+                ? await File.ReadAllTextAsync(_itemsFilePath) 
+                : "[]";
+            var inventory = JsonSerializer.Deserialize<List<Item>>(itemsJson) ?? new List<Item>();
+
+            // Load existing orders (orders.json)
+            var ordersJson = File.Exists(_ordersFilePath) 
+                ? await File.ReadAllTextAsync(_ordersFilePath) 
+                : "[]";
             var orders = JsonSerializer.Deserialize<List<Order>>(ordersJson) ?? new List<Order>();
 
-            // Map DTO in Entity
+
+            // Map DTO in Entity to validate stock and create order
+           foreach (var ordered in orderInput.Items)
+            {
+                var stock = inventory.FirstOrDefault(i => i.ProductId == ordered.ProductId)
+                    ?? throw new InvalidOperationException(
+                        $"No inventory found for ProductId {ordered.ProductId}");
+
+                if (stock.StockQuantity < ordered.Quantity)
+                    throw new InvalidOperationException(
+                        $"Not enough stock for ProductId {ordered.ProductId}. " +
+                        $"Available: {stock.StockQuantity}, Requested: {ordered.Quantity}");
+
+                // Deduct stock
+                stock.StockQuantity -= ordered.Quantity;
+            }
+            // Create the new order
             var newOrder = new Order
             {
-                Id          = orders.Count > 0 ? orders.Max(order => order.Id) + 1 : 1,
-                CustomerName        = orderInput.CustomerName,
-                OrderDate = DateTime.Now,
-                OrderItems = orderInput.Items.Select(item => new OrderItem
+                Id           = orders.Count > 0 ? orders.Max(o => o.Id) + 1 : 1,
+                CustomerName = orderInput.CustomerName,
+                OrderDate    = DateTime.Now,
+                OrderItems   = orderInput.Items.Select(item => new OrderItem
                 {
                     ProductId = item.ProductId,
-                    Quantity = item.Quantity,
+                    Quantity  = item.Quantity,
                     UnitPrice = item.UnitPrice
                 }).ToList()
             };
@@ -177,39 +206,73 @@ namespace MyShop.Services
              try
             {
                 orders.Add(newOrder);
-                var serializedOrders = JsonSerializer.Serialize(orders, new JsonSerializerOptions { WriteIndented = true });
-                await File.WriteAllTextAsync(_ordersFilePath, serializedOrders);
+                // Save both files
+                await File.WriteAllTextAsync(_ordersFilePath, JsonSerializer.Serialize(orders, 
+                    new JsonSerializerOptions { WriteIndented = true }));
+                await File.WriteAllTextAsync(_itemsFilePath, JsonSerializer.Serialize(inventory, 
+                    new JsonSerializerOptions { WriteIndented = true }));
+
             }
             catch (IOException)
             {
                 throw;
             }
-
-
-
-
         }
     
         public async Task UpdateOrder(int id, OrderUpdateDTO orderInput)
         {
-            //  var orders = (await GetAllOrders()).ToList();
-            var ordersJson = await File.ReadAllTextAsync(_ordersFilePath);
+           
+            var ordersJson = File.Exists(_ordersFilePath) 
+                            ? await File.ReadAllTextAsync(_ordersFilePath) 
+                            : "[]";
             var orders = JsonSerializer.Deserialize<List<Order>>(ordersJson) ?? new List<Order>();
             var existingOrder = orders.FirstOrDefault(order => order.Id == id)
              ?? throw new KeyNotFoundException("Order not found.");
 
-            existingOrder.CustomerName = orderInput.CustomerName;
+             // Load inventory
+            var itemsJson = File.Exists(_itemsFilePath)
+                ? await File.ReadAllTextAsync(_itemsFilePath)
+                : "[]";
+            var inventory = JsonSerializer.Deserialize<List<Item>>(itemsJson) ?? new List<Item>();
 
-           existingOrder.OrderItems = orderInput.Items.Select(item => new OrderItem
+            // Restore old stock
+            foreach (var oldItem in existingOrder.OrderItems)
             {
-                OrderId = id, 
-                ProductId = item.ProductId,
-                Quantity = item.Quantity,
-                UnitPrice = item.UnitPrice
-            }).ToList();   
+                var stock = inventory.FirstOrDefault(i => i.ProductId == oldItem.ProductId);
+                if (stock != null)
+                    stock.StockQuantity += oldItem.Quantity;
+            }
+
+            // Validate and deduct new stock
+            foreach (var newItem in orderInput.Items)
+            {
+                var stock = inventory.FirstOrDefault(i => i.ProductId == newItem.ProductId)
+                    ?? throw new InvalidOperationException(
+                        $"No inventory found for ProductId {newItem.ProductId}");
+
+                if (stock.StockQuantity < newItem.Quantity)
+                    throw new InvalidOperationException(
+                        $"Not enough stock for ProductId {newItem.ProductId}. " +
+                        $"Available: {stock.StockQuantity}, Requested: {newItem.Quantity}");
+
+                stock.StockQuantity -= newItem.Quantity;
+            }
+
+            // Update the order
+            existingOrder.CustomerName = orderInput.CustomerName;
+            existingOrder.OrderItems = orderInput.Items.Select(item => new OrderItem
+                {
+                    OrderId = id, 
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    UnitPrice = item.UnitPrice
+                }).ToList();   
             try
             {
-                await File.WriteAllTextAsync(_ordersFilePath, JsonSerializer.Serialize(orders, new JsonSerializerOptions { WriteIndented = true }));
+                await File.WriteAllTextAsync(_ordersFilePath, JsonSerializer.Serialize(orders, 
+                    new JsonSerializerOptions { WriteIndented = true }));
+                await File.WriteAllTextAsync(_itemsFilePath, JsonSerializer.Serialize(inventory,
+                    new JsonSerializerOptions { WriteIndented = true }));
             }
             catch (IOException)
             {
@@ -239,20 +302,17 @@ namespace MyShop.Services
 //items
         public async Task<IEnumerable<ItemResponseDTO>> GetAllItems()
         {
-            if (!File.Exists(_itemsFilePath))
-            {
-                return Enumerable.Empty<ItemResponseDTO>();
-            }
+            var itemsJson = File.Exists(_itemsFilePath) ? await File.ReadAllTextAsync(_itemsFilePath) : "[]";
+
             try
             {                
-            var itemsJson = await File.ReadAllTextAsync(_itemsFilePath);
             var items = JsonSerializer.Deserialize<List<OrderItem>>(itemsJson) ?? new List<OrderItem>();
             return items.Select(item => new ItemResponseDTO
             {
                 Id = item.Id,
                 ProductId = item.ProductId,
                 ProductName = item.Product?.Name ?? string.Empty,
-                Quantity = item.Quantity
+                StockQuantity = item.Quantity
             }).ToList();
             }
             catch (JsonException)
@@ -276,7 +336,7 @@ namespace MyShop.Services
 
         public async Task AddItem(ItemCreateDTO itemInput)
         {
-            var itemsJson = await File.ReadAllTextAsync(_itemsFilePath);
+            var itemsJson = File.Exists(_itemsFilePath) ? await File.ReadAllTextAsync(_itemsFilePath) : "[]";
             var items = JsonSerializer.Deserialize<List<OrderItem>>(itemsJson) ?? new List<OrderItem>();
 
             var newItem = new OrderItem
@@ -289,8 +349,8 @@ namespace MyShop.Services
              try
             {
                 items.Add(newItem);
-                var serializedItems = JsonSerializer.Serialize(items, new JsonSerializerOptions { WriteIndented = true });
-                await File.WriteAllTextAsync(_itemsFilePath, serializedItems);
+                await File.WriteAllTextAsync(_itemsFilePath, JsonSerializer.Serialize(items, 
+                    new JsonSerializerOptions { WriteIndented = true }));
             }
             catch (IOException)
             {
@@ -300,7 +360,7 @@ namespace MyShop.Services
 
         public async Task UpdateItem(int id, ItemUpdateDTO itemInput)
         {
-            var itemsJson = await File.ReadAllTextAsync(_itemsFilePath);
+            var itemsJson = File.Exists(_itemsFilePath) ? await File.ReadAllTextAsync(_itemsFilePath) : "[]";
             var items = JsonSerializer.Deserialize<List<OrderItem>>(itemsJson) ?? new List<OrderItem>();
             var existingItem = items.FirstOrDefault(item => item.Id == id)
              ?? throw new KeyNotFoundException("Item not found.");
@@ -309,7 +369,8 @@ namespace MyShop.Services
 
             try
             {
-                await File.WriteAllTextAsync(_itemsFilePath, JsonSerializer.Serialize(items, new JsonSerializerOptions { WriteIndented = true }));
+                await File.WriteAllTextAsync(_itemsFilePath, JsonSerializer.Serialize(items, 
+                new JsonSerializerOptions { WriteIndented = true }));
             }
             catch (IOException)
             {
