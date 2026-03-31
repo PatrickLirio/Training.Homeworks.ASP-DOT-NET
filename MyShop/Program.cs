@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using MyShop.Configurations.Seeders;
 using MyShop.Data;
+using MyShop.Seeders;
 using MyShop.Services;
 using MyShop.Services.Interfaces;
 
@@ -32,8 +33,9 @@ namespace MyShop
                 var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                 context.Database.Migrate(); // Apply any pending migrations
                 ProductSeeder.Seed(context); // Seed the database with initial data
-
-
+                OrderSeeder.Seed(context); // Seed the database with initial data
+                ItemSeeder.Seed(context); // Seed the database with initial data
+                OrderItemSeeder.Seed(context); // Seed the database with initial data
                 #region -- Debugging Seeding Process--
                 // try
                 // {
