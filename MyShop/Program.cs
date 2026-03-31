@@ -2,6 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using MyShop.Configurations.Seeders;
 using MyShop.Data;
+using MyShop.Repository;
+using MyShop.Repository.Interfaces;
 using MyShop.Seeders;
 using MyShop.Services;
 using MyShop.Services.Interfaces;
@@ -16,8 +18,13 @@ namespace MyShop
 
              // Configure Database Context
             builder.Services.AddDbContext<AppDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));   
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));  
 
+            //Add repositories to the container.
+            builder.Services.AddScoped<IProductRepository, ProductRepository>(); 
+            builder.Services.AddScoped<IItemRepository, ItemRepository>();
+            builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+            
             // Add services to the container.
             builder.Services.AddScoped<IStorageService, StorageService>();
 
@@ -36,6 +43,8 @@ namespace MyShop
                 OrderSeeder.Seed(context); // Seed the database with initial data
                 ItemSeeder.Seed(context); // Seed the database with initial data
                 OrderItemSeeder.Seed(context); // Seed the database with initial data
+
+
                 #region -- Debugging Seeding Process--
                 // try
                 // {
