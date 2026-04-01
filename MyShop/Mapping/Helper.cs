@@ -12,9 +12,8 @@ namespace MyShop.Mapping
 
 
         // In Helper.cs - add this method
-        public static Product MapToProductEntity(ProductCreateDTO productInput, int id) => new()
+        public static Product MapToProductEntity(ProductCreateDTO productInput) => new()
         {
-            Id          = id,
             Name        = productInput.Name,
             Price       = productInput.Price,
             Description = productInput.Description,
@@ -25,9 +24,10 @@ namespace MyShop.Mapping
         {
             Id          = product.Id,
             Name        = product.Name,
-            Price       = product.Price,
             Description = product.Description,
-            Category    = product.Category
+            Category    = product.Category,
+            Price       = product.Price,
+            StockQuantity = product.Items.FirstOrDefault()?.StockQuantity ?? 0
         };
 
         // Map a list of Products to a list of ProductResponseDTOs

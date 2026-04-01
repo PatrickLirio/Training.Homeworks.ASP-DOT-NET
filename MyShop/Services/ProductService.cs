@@ -48,8 +48,7 @@ public class ProductService : IProductService
             if (await _productRepository.NameExistsAsync(productInput.Name))
                 throw new InvalidOperationException("A product with the same name already exists.");
 
-            var newId   = (await _productRepository.GetAllAsync()).Max(p => p.Id) + 1;
-            var product = Helper.MapToProductEntity(productInput, newId);
+            var product = Helper.MapToProductEntity(productInput);
             await _productRepository.AddAsync(product);
         }
 

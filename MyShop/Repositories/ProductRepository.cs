@@ -9,34 +9,37 @@ namespace MyShop.Repository
     public class ProductRepository : IProductRepository
     {
         private readonly AppDbContext _context;
+        private readonly DbSet<Product> products;
         public ProductRepository(AppDbContext context)
         {
-            _context = context;
+            // _context = context;
+            this._context = context;
+            products = _context.Products;
         }
 
-        public async Task<IEnumerable<Product>> GetAllAsync() => await _context.Products.ToListAsync();
+        public async Task<IEnumerable<Product>> GetAllAsync() => await products.Include(p => p.Items).ToListAsync();
 
-        public async Task<Product?> GetByIdAsync(int id) => await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
+        public async Task<Product?> GetByIdAsync(int id) => await products.Include(p => p.Items).FirstOrDefaultAsync(p => p.Id == id);
 
-        public async Task<Product?> GetByNameAsync(string name) => await _context.Products.FirstOrDefaultAsync(p => p.Name.ToLower() == name.ToLower());
+        public async Task<Product?> GetByNameAsync(string name) => await products.Include(p => p.Items).FirstOrDefaultAsync(p => p.Name.ToLower() == name.ToLower());
 
-        public async Task<bool> NameExistsAsync(string name, int? excludeId = null) => await _context.Products.AnyAsync(p => p.Name == name && (!excludeId.HasValue || p.Id != excludeId.Value));
+        public async Task<bool> NameExistsAsync(string name, int? excludeId = null) => await products.AnyAsync(p => p.Name == name && (!excludeId.HasValue || p.Id != excludeId.Value));
        
-        public async Task AddAsync(Product product)
+        public async Task AddAsync(Product product) 
         {
-            _context.Products.Add(product);
+            await products.AddAsync(product);
             await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(Product product)
+        public async Task UpdateAsync(Product product) 
         {
-            _context.Products.Update(product);
+            products.Update(product);
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(Product product)
+        public async Task DeleteAsync(Product product) 
         {
-            _context.Products.Remove(product);
+            products.Remove(product);
             await _context.SaveChangesAsync();
         }
     }
