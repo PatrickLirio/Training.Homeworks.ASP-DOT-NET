@@ -12,10 +12,13 @@ namespace MyShop.Services
         private readonly IOrderRepository _orderRepository;
         private readonly IProductRepository _productRepository;
 
-        public OrderService(IOrderRepository orderRepository, IProductRepository productRepository)
+        private readonly IItemRepository _itemRepository;
+
+        public OrderService(IOrderRepository orderRepository, IProductRepository productRepository, IItemRepository itemRepository)
         {
             _orderRepository = orderRepository;
             _productRepository = productRepository;
+            _itemRepository = itemRepository;
         }
 
         public async Task<IEnumerable<OrderResponseDTO>> GetAllOrders()
@@ -46,19 +49,43 @@ namespace MyShop.Services
 
         public async Task AddOrder(OrderCreateDTO orderInput)
         {
-            var newId = (await _orderRepository.GetAllAsync()).Max(o => o.Id) + 1;
+             var orderItems = new List<OrderItem>();
+
+            foreach (var item in orderInput.Items)
+            {
+               
+                var product = await _productRepository.GetByIdAsync(item.ProductId)
+                    ?? throw new KeyNotFoundException(
+                        $"Product with ID {item.ProductId} not found.");
+
+              
+                var stock = await _itemRepository.GetByProductIdAsync(item.ProductId)
+                    ?? throw new InvalidOperationException(
+                        $"No inventory found for ProductId {item.ProductId}");
+
+                if (stock.StockQuantity < item.Quantity)
+                    throw new InvalidOperationException(
+                        $"Not enough stock for ProductId {item.ProductId}. " +
+                        $"Available: {stock.StockQuantity}, Requested: {item.Quantity}");
+
+                stock.StockQuantity -= item.Quantity;
+                await _itemRepository.UpdateAsync(stock);
+
+                orderItems.Add(new OrderItem
+                {
+                    ProductId = item.ProductId,
+                    Quantity  = item.Quantity,
+                    UnitPrice = product.Price 
+                });
+            }
+
             var order = new Order
             {
-                Id = newId,
                 CustomerName = orderInput.CustomerName,
-                OrderDate = DateTime.UtcNow,
-                OrderItems = orderInput.Items.Select(i => new OrderItem
-                {
-                    ProductId = i.ProductId,
-                    Quantity = i.Quantity,
-                    UnitPrice = i.UnitPrice
-                }).ToList()
+                OrderDate    = DateTime.UtcNow,
+                OrderItems   = orderItems
             };
+
             await _orderRepository.AddAsync(order);
         }
 
@@ -67,13 +94,26 @@ namespace MyShop.Services
             var order = await _orderRepository.GetByIdAsync(id)
                 ?? throw new KeyNotFoundException("Order not found.");
 
-            order.CustomerName = orderInput.CustomerName;
-            order.OrderItems = orderInput.Items.Select(i => new OrderItem
+            var orderItems = new List<OrderItem>();
+
+            foreach (var item in orderInput.Items)
             {
-                ProductId = i.ProductId,
-                Quantity = i.Quantity,
-                UnitPrice = i.UnitPrice
-            }).ToList();
+
+                var product = await _productRepository.GetByIdAsync(item.ProductId)
+                    ?? throw new KeyNotFoundException(
+                        $"Product with ID {item.ProductId} not found.");
+
+                orderItems.Add(new OrderItem
+                {
+                    OrderId   = id,
+                    ProductId = item.ProductId,
+                    Quantity  = item.Quantity,
+                    UnitPrice = product.Price 
+                });
+            }
+
+            order.CustomerName = orderInput.CustomerName;
+            order.OrderItems   = orderItems;
 
             await _orderRepository.UpdateAsync(order);
         }
