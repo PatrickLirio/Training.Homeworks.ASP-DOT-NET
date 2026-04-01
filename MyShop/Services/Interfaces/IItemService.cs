@@ -1,8 +1,14 @@
 
+using MyShop.DTO.Items;
+
 namespace MyShop.Services.Interfaces
 {
-    public interface IItemService : IStorageService
+    public interface IItemService 
     {
-        // Define any additional methods specific to ItemService if needed
+        Task<IEnumerable<ItemResponseDTO>> GetAllItems();
+        Task<ItemResponseDTO> GetItemById(int id);
+        Task AddItem(ItemCreateDTO itemInput);
+        Task UpdateItem(int id, ItemUpdateDTO itemInput);
+        Task DeleteItem(int id);
     }
 }
