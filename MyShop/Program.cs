@@ -28,6 +28,8 @@ namespace MyShop
             // Add services to the container.
             // builder.Services.AddScoped<IStorageService, StorageService>();
             builder.Services.AddScoped<IProductService, ProductService>();
+            builder.Services.AddScoped<IItemService, ItemService>();
+            builder.Services.AddScoped<IOrderService, OrderService>();
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
