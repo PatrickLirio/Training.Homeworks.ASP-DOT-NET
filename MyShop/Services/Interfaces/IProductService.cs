@@ -10,6 +10,7 @@ namespace MyShop.Services.Interfaces
         
         Task<IEnumerable<ProductResponseDTO>> GetAllProducts();
         Task<ProductResponseDTO> GetProductById(int id);
+        Task<ProductResponseDTO> GetProductByName(string name);
         Task<IEnumerable<ProductResponseDTO>> GetProductsByCategory(string category);
         Task AddProduct(ProductCreateDTO productInput);
         Task UpdateProduct(int Id, ProductUpdateDTO productInput);

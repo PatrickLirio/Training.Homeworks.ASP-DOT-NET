@@ -18,6 +18,8 @@ namespace MyShop.Repository
 
         public async Task<Product?> GetByIdAsync(int id) => await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
 
+        public async Task<Product?> GetByNameAsync(string name) => await _context.Products.FirstOrDefaultAsync(p => p.Name.ToLower() == name.ToLower());
+
         public async Task<bool> NameExistsAsync(string name, int? excludeId = null) => await _context.Products.AnyAsync(p => p.Name == name && (!excludeId.HasValue || p.Id != excludeId.Value));
        
         public async Task AddAsync(Product product)

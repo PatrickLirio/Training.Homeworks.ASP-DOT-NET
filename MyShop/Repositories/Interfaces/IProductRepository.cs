@@ -8,6 +8,7 @@ namespace MyShop.Repository.Interfaces
     {
         Task<IEnumerable<Product>> GetAllAsync();
         Task<Product?> GetByIdAsync(int id);
+        Task<Product?> GetByNameAsync(string name);
         Task<bool> NameExistsAsync(string name, int? excludeId = null);
         Task AddAsync(Product product);
         Task UpdateAsync(Product product);

@@ -38,6 +38,20 @@ namespace MyShop.Controllers
             }
         }
 
+        [HttpGet("name/{name}")]
+        public async Task<IActionResult> GetProductByName(string name)
+        {
+            try
+            {
+                var product = await _productService.GetProductByName(name);
+                return Ok(product);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
         [HttpGet("category/{category}")]
         public async Task<IActionResult> GetProductsByCategory(string category)
         {

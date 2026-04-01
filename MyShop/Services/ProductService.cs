@@ -29,6 +29,13 @@ public class ProductService : IProductService
             return Helper.MapToProductResponseDTO(product);
         }
 
+        public async Task<ProductResponseDTO> GetProductByName(string name)
+        {
+            var product = await _productRepository.GetByNameAsync(name)
+                ?? throw new KeyNotFoundException($"Product with name '{name}' not found.");
+            return Helper.MapToProductResponseDTO(product);
+        }
+
         public async Task<IEnumerable<ProductResponseDTO>> GetProductsByCategory(string category)
         {
             var products = await _productRepository.GetAllAsync();
