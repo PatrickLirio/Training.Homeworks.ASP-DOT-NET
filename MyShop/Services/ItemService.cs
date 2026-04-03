@@ -34,6 +34,15 @@ namespace MyShop.Services
             return Helper.MapToItemResponseDTO(item, productLookup);
         }
 
+        public async Task<ItemResponseDTO> GetItemByName(string name)
+        {
+            var item = await _itemRepository.GetByNameAsync(name)
+                ?? throw new Exception($"Item with name {name} not found.");
+            var products = await _productRepository.GetAllAsync();
+            var productLookup = products.ToDictionary(p => p.Id, p => p);
+            return Helper.MapToItemResponseDTO(item, productLookup);
+        }
+
         public async Task AddItem(ItemCreateDTO itemInput)
         {
             var newId = (await _itemRepository.GetAllAsync()).Max(i => i.Id) + 1;

@@ -22,7 +22,7 @@ namespace MyShop.Controllers
             return Ok(orders);
         }
 
-        [HttpGet("customer/{customerName}")]
+        [HttpGet("{customerName:alpha}")]
         public async Task<IActionResult> GetOrdersByCustomer(string customerName)
         {
             var orders = await _orderService.GetOrdersByCustomer(customerName);

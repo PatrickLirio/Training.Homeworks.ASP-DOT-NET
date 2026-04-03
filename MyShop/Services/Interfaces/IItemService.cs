@@ -7,6 +7,7 @@ namespace MyShop.Services.Interfaces
     {
         Task<IEnumerable<ItemResponseDTO>> GetAllItems();
         Task<ItemResponseDTO> GetItemById(int id);
+        Task<ItemResponseDTO> GetItemByName(string name);
         Task AddItem(ItemCreateDTO itemInput);
         Task UpdateItem(int id, ItemUpdateDTO itemInput);
         Task DeleteItem(int id);

@@ -36,6 +36,21 @@ namespace MyShop.Controllers
                 return NotFound(ex.Message);
             }
         }
+        [HttpGet("{name:alpha}")]
+        public async Task<IActionResult> GetItemByName(string name)
+        {
+            try
+            {
+                var item = await _itemService.GetItemByName(name);
+                return Ok(item);
+            }
+            catch (Exception ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+
         [HttpPost]
         public async Task<IActionResult> AddItem(ItemCreateDTO itemInput)
         {
