@@ -38,7 +38,7 @@ namespace MyShop.Controllers
             }
         }
 
-        [HttpGet("{name:alpha}")]
+        [HttpGet("name/{name}")]
         public async Task<IActionResult> GetProductByName(string name)
         {
             try
@@ -52,7 +52,7 @@ namespace MyShop.Controllers
             }
         }
 
-        [HttpGet("{category:alpha}")]
+        [HttpGet("category/{category}")]
         public async Task<IActionResult> GetProductsByCategory(string category)
         {
             var products = await _productService.GetProductsByCategory(category);
