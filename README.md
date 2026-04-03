@@ -41,6 +41,11 @@ dotnet run
 ```
 https://localhost:<port>/swagger
 ```
+4. To know the error/debugging run this:
+
+```
+dotnet run build
+```
 
 ## Notes
 
