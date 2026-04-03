@@ -1,5 +1,8 @@
-# .gitignore for a .NET 8 Razor Pages project (Visual Studio)
-# Keeps build artifacts, user-specific files, credentials and editor caches out of Git.
+# .gitignore for a .NET 8 + Angular project
+
+# ========================
+# .NET / Visual Studio
+# ========================
 
 # Build outputs
 [Bb]in/
@@ -18,7 +21,7 @@
 *.sln.docstates
 
 # Rider / JetBrains
-.idea/	
+.idea/
 *.sln.iml
 *.Rider/
 
@@ -38,21 +41,54 @@ secrets.json
 appsettings.Development.json
 appsettings.*.local
 
-# Node / front-end
+# ========================
+# Angular / Node
+# ========================
+
+# Dependencies
 node_modules/
+
+# Angular build output
+dist/
+build/
+.tmp/
+out-tsc/
+
+# Angular cache
+.angular/cache/
+
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log
+pnpm-debug.log*
+lerna-debug.log*
 
-# Test results & coverage
+# Package managers
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environment files (optional: keep example instead)
+src/environments/environment*.ts
+
+# Compiled JS / maps
+*.js.map
+
+# Coverage
+coverage/
+
+# ========================
+# Testing
+# ========================
 TestResults/
 *.trx
-coverage/
 *.coverage
 *.coveragexml
 
+# ========================
 # Logs and databases
+# ========================
 *.log
 *.sqlite
 *.db
@@ -60,20 +96,28 @@ coverage/
 *.ldf
 *.db-journal
 
+# ========================
 # IDE / tool caches
+# ========================
 _ReSharper*/
 *.ReSharper
 *.DotSettings.user
 
+# ========================
 # OS generated files
+# ========================
 .DS_Store
 Thumbs.db
 
+# ========================
 # Temp files
+# ========================
 *.tmp
 *.temp
 
+# ========================
 # Local environment files
+# ========================
 .env
 .env.local
 .env.*.local
