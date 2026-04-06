@@ -12,7 +12,7 @@ namespace MyShop_v2.Infrastructure.Configurations
     {
         public override void Configure(EntityTypeBuilder<Product> builder)
         {
-           base.Configure(builder);
+            base.Configure(builder);
             builder.Property(p => p.Name)
                 .IsRequired()
                 .HasMaxLength(200);
@@ -20,13 +20,31 @@ namespace MyShop_v2.Infrastructure.Configurations
             builder.Property(p => p.Description)
                 .HasMaxLength(500);
 
-            builder.Property(p => p.CategoryID)
-                .IsRequired()
-                .HasMaxLength(50);
+            builder.Property(p => p.CategoryId)
+                .IsRequired();
 
             builder.Property(p => p.Price)
                 .IsRequired()
-                .HasPrecision(18, 2);
+                .HasColumnType("decimal(18,2)");
+
+            builder.Property(p => p.IsActive)
+                .IsRequired();
+
+        //indexes
+        builder.HasIndex(p => p.CategoryId);
+        builder.HasIndex(p => p.IsActive );
+
+        // relationships
+            builder.HasMany(p => p.Items)
+                    .WithOne(i => i.Product)
+                    .HasForeignKey(i => i.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
+    
+            builder.HasOne(p => p.Category)
+                    .WithMany()
+                    .HasForeignKey(p => p.CategoryId)
+                    .OnDelete(DeleteBehavior.NoAction);
+
         }
         
     }
