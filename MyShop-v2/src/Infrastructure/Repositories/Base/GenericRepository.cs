@@ -24,7 +24,7 @@ namespace MyShop_v2.Infrastructure.Repositories.Base
         public virtual TId GetId(Expression<Func<T, bool>> predicate, bool noTracking = true )
         {
             var query = _dbSet.AsQueryable();
-            if (noTracking) query.AsNoTracking();
+            if (noTracking) query = query.AsNoTracking();
             var entity = query.SingleOrDefault(predicate);
             return entity == null ? default : entity.Id;
         }
@@ -63,7 +63,7 @@ namespace MyShop_v2.Infrastructure.Repositories.Base
         {
             //var query = _dbSet;
             var query = _dbSet.AsQueryable();
-            if (noTracking) query.AsNoTracking();
+            if (noTracking) query = query.AsNoTracking(); // IQueryable is immutable. If not returned back to the query tracking remains enabled.
             return query.SingleOrDefault(predicate);
         }
 
