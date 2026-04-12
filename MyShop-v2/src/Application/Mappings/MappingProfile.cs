@@ -13,7 +13,7 @@ namespace MyShop_v2.Application.Mappings
         {
             // Category Mappings
             CreateMap<Category, CategoryResponse>()
-                .ForMember(dest => dest.ParentName, opt => opt.MapFrom(src => src.Parent.Name));
+                .ForMember(dest => dest.ParentName, opt => opt.MapFrom(src => src.Parent != null ? src.Parent.Name : null));
             CreateMap<CategoryRequest, Category>();
 
             // Product Mappings

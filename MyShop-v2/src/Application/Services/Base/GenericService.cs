@@ -1,8 +1,9 @@
-using MyShop_v2.Application.Filters;
+
 using MyShop_v2.Application.Interfaces.Base;
 using MyShop_v2.Domain.Entities.Base.Interface;
 using AutoMapper;
 using MyShop_v2.Application.DTOs.Common;
+using MyShop_v2.Application.Filters;
 
 namespace MyShop_v2.Application.Services.Base
 {
@@ -21,25 +22,18 @@ namespace MyShop_v2.Application.Services.Base
             this.mapper = mapper;
         }
 
-        public virtual TResponse GetById(TId id) => mapper.Map<TResponse>(repository.GetById(id));
+        public virtual TResponse GetById(TId id) => mapper.Map<TResponse>(repository.Find(x => x.Id.Equals(id), includeRelation: true).FirstOrDefault());
         
         public virtual TId GetId(FilterGroup filterGroup, bool noTracking = true) 
             => repository.GetId(filterService.BuildPredicate<T>(filterGroup), noTracking);
 
         public virtual async Task<TResponse> GetByIdAsync(TId id) 
-            => mapper.Map<TResponse>(await repository.GetByIdAsync(id));
+            => mapper.Map<TResponse>((await repository.FindAsync(x => x.Id.Equals(id), includeRelation: true)).FirstOrDefault());
 
-        public virtual async Task<IEnumerable<TResponse>> GetAllAsync(bool noTracking = true) 
-            => mapper.Map<IEnumerable<TResponse>>(await repository.GetAllAsync(noTracking));
-
-        public virtual IEnumerable<TResponse> Find(FilterGroup filterGroup, bool noTracking = true) 
-            => mapper.Map<IEnumerable<TResponse>>(repository.Find(filterService.BuildPredicate<T>(filterGroup), noTracking));
-
-        public virtual async Task<IEnumerable<TResponse>> FindAsync(FilterGroup filterGroup, bool noTracking = true) 
-            => mapper.Map<IEnumerable<TResponse>>(await repository.FindAsync(filterService.BuildPredicate<T>(filterGroup), noTracking));
-
-        public virtual TResponse GetItem(FilterGroup filterGroup, bool noTracking = true) 
-            => mapper.Map<TResponse>(repository.GetItem(filterService.BuildPredicate<T>(filterGroup), noTracking));
+        public virtual async Task<IEnumerable<TResponse>> GetAllAsync(bool noTracking = true) => mapper.Map<IEnumerable<TResponse>>(await repository.GetAllAsync(noTracking, includeRelation: true));
+        public virtual IEnumerable<TResponse> Find(FilterGroup filterGroup, bool noTracking = true) => mapper.Map<IEnumerable<TResponse>>(repository.Find(filterService.BuildPredicate<T>(filterGroup), noTracking, includeRelation: true));
+        public virtual async Task<IEnumerable<TResponse>> FindAsync(FilterGroup filterGroup, bool noTracking = true) => mapper.Map<IEnumerable<TResponse>>(await repository.FindAsync(filterService.BuildPredicate<T>(filterGroup), noTracking, includeRelation: true));        
+         public virtual TResponse GetItem(FilterGroup filterGroup, bool noTracking = true) => mapper.Map<TResponse>(repository.GetItem(filterService.BuildPredicate<T>(filterGroup), noTracking));
 
         public virtual TResponse Add(TRequest request)
         {
@@ -81,7 +75,15 @@ namespace MyShop_v2.Application.Services.Base
         //     // Set includeRelation to true so AutoMapper can find the related names (e.g., CategoryName)
         //     var items = await repository.FindAsync(predicate, includeRelation: true);
         //     var totalCount = await repository.CountAsync(predicate);
-
+        // public virtual async Task<PagedResult<TResponse>> GetPagedAsync(FilterGroup filterGroup, int pageNumber,
+        //     return new PagedResult<TResponse>
+        //     {
+        //         Items = mapper.Map<IEnumerable<TResponse>>(items.Skip((pageNumber - 1) * pageSize).Take(pageSize)),
+        //         TotalCount = totalCount,
+        //         PageNumber = pageNumber,
+        //         PageSize = pageSize
+        //     };
+        // }
         //     return new PagedResult<TResponse>
         //     {
         //         Items = mapper.Map<IEnumerable<TResponse>>(items.Skip((pageNumber - 1) * pageSize).Take(pageSize)),
