@@ -11,4 +11,8 @@
   <ItemGroup>
     <ProjectReference Include="..\Domain\MyShop-v2.Domain.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="16.1.1" />
+  </ItemGroup>
 </Project>

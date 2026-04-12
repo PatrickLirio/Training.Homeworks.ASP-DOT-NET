@@ -1,8 +1,9 @@
+using MyShop_v2.Application.DTOs.Common;
+
 namespace MyShop_v2.Application.DTOs.Category
 {
-    public class CategoryResponse
+    public class CategoryResponse : BaseResponse<int>
     {
-        public int Id { get; set; }
         public string Name { get; set; }
         public int? ParentID { get; set; }
         public bool IsActive { get; set; }

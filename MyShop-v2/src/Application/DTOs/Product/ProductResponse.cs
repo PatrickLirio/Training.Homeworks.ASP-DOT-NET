@@ -1,8 +1,9 @@
+using MyShop_v2.Application.DTOs.Common;
+
 namespace MyShop_v2.Application.DTOs.Product
 {
-    public class ProductResponse
+    public class ProductResponse : BaseResponse<long>
     {
-        public long Id { get; set; }
         public string Name { get; set; }
         public string? Description { get; set; }
         public decimal Price { get; set; }
