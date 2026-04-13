@@ -1,9 +1,10 @@
 using AutoMapper;
-using MyShop_v2.Domain.Entities;
-using MyShop_v2.Application.DTOs.Product;
 using MyShop_v2.Application.DTOs.Category;
 using MyShop_v2.Application.DTOs.Order;
+using MyShop_v2.Application.DTOs.Product;
 using MyShop_v2.Application.DTOs.StockMovement;
+using MyShop_v2.Domain.Entities;
+using MyShop_v2.Domain.Enums;
 
 namespace MyShop_v2.Application.Mappings
 {
@@ -18,7 +19,8 @@ namespace MyShop_v2.Application.Mappings
 
             // Product Mappings
             CreateMap<Product, ProductResponse>()
-                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.Name));
+                .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.Name))
+                .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive == ProductStatus.Active)); // adjust enum value to match yours
             CreateMap<ProductRequest, Product>();
 
             // Order Mappings

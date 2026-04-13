@@ -1,5 +1,6 @@
 
 
+using System.ComponentModel.DataAnnotations.Schema;
 using MyShop_v2.Domain.Entities.Base;
 using MyShop_v2.Domain.Enums;
 
@@ -21,9 +22,10 @@ namespace MyShop_v2.Domain.Entities
         // Navigation
         // many-to-one relationship with Category
         // many products can belong to one category
-
         public Category Category { get; set; }
 
+        // one-to-many relationship with StockMovement
+        // one product can have many stock movements
        public ICollection<StockMovement> StockMovements { get; set; } = new List<StockMovement>();
 
         

@@ -61,7 +61,6 @@ namespace MyShop_v2.Infrastructure.Migrations
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     IsActive = table.Column<int>(type: "int", nullable: false),
-                    CategoryId1 = table.Column<int>(type: "int", nullable: true),
                     LastUpdatedBy = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     LastUpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
@@ -72,12 +71,8 @@ namespace MyShop_v2.Infrastructure.Migrations
                         name: "FK_Products_Categories_CategoryId",
                         column: x => x.CategoryId,
                         principalTable: "Categories",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Products_Categories_CategoryId1",
-                        column: x => x.CategoryId1,
-                        principalTable: "Categories",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -185,11 +180,6 @@ namespace MyShop_v2.Infrastructure.Migrations
                 name: "IX_Products_CategoryId",
                 table: "Products",
                 column: "CategoryId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Products_CategoryId1",
-                table: "Products",
-                column: "CategoryId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Products_IsActive",

@@ -1,14 +1,15 @@
-using MyShop_v2.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.SqlServer;
-using MyShop_v2.Application.Mappings;
+using Microsoft.Extensions.DependencyInjection;
 using MyShop_v2.Application.Filters;
-using MyShop_v2.Application.Services.Base;
-using MyShop_v2.Application.Services;
-using MyShop_v2.Application.Interfaces.Base;
-using MyShop_v2.Infrastructure.Repositories.Base;
 using MyShop_v2.Application.Interfaces;
+using MyShop_v2.Application.Interfaces.Base;
+using MyShop_v2.Application.Mappings;
+using MyShop_v2.Application.Services;
+using MyShop_v2.Application.Services.Base;
+using MyShop_v2.Infrastructure.Data;
 using MyShop_v2.Infrastructure.Repositories;
+using MyShop_v2.Infrastructure.Repositories.Base;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,7 +43,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Register AutoMapper
-builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>()); // automapper v16 on .net v10
 
 var app = builder.Build();
 

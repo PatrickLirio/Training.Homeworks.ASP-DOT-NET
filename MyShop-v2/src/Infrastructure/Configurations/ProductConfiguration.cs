@@ -40,10 +40,10 @@ namespace MyShop_v2.Infrastructure.Configurations
                     .HasForeignKey(i => i.ProductId)
                     .OnDelete(DeleteBehavior.Cascade);
     
-            builder.HasOne(p => p.Category)
-                    .WithMany()
-                    .HasForeignKey(p => p.CategoryId)
-                    .OnDelete(DeleteBehavior.NoAction);
+            // builder.HasOne(p => p.Category)
+            //         .WithMany()
+            //         .HasForeignKey(p => p.CategoryId)
+            //         .OnDelete(DeleteBehavior.NoAction);
 
         }
         

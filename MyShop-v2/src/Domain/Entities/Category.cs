@@ -1,4 +1,5 @@
 
+using System.ComponentModel.DataAnnotations.Schema;
 using MyShop_v2.Domain.Entities.Base;
 
 namespace MyShop_v2.Domain.Entities

@@ -12,7 +12,7 @@ using MyShop_v2.Infrastructure.Data;
 namespace MyShop_v2.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260406053555_InitialCreate")]
+    [Migration("20260413030529_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -169,9 +169,6 @@ namespace MyShop_v2.Infrastructure.Migrations
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("CategoryId1")
-                        .HasColumnType("int");
-
                     b.Property<string>("Description")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -198,8 +195,6 @@ namespace MyShop_v2.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CategoryId");
-
-                    b.HasIndex("CategoryId1");
 
                     b.HasIndex("IsActive");
 
@@ -281,14 +276,10 @@ namespace MyShop_v2.Infrastructure.Migrations
             modelBuilder.Entity("MyShop_v2.Domain.Entities.Product", b =>
                 {
                     b.HasOne("MyShop_v2.Domain.Entities.Category", "Category")
-                        .WithMany()
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.HasOne("MyShop_v2.Domain.Entities.Category", null)
                         .WithMany("Products")
-                        .HasForeignKey("CategoryId1");
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Category");
                 });
